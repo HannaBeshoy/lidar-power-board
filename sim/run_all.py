@@ -52,6 +52,27 @@ TESTS = [
         ('vadc_02', 0.19, 0.21, 'V', '1 V per A at 0.2 A'),
         ('vadc_1', 0.98, 1.02, 'V', '1 V per A at 1 A (XADC full scale)'),
     ]),
+    ('status LED: FPGA pin high, transistor saturated', 'status_led.cir', {}, 'v(pin0) v(c) i(Vic)', [
+        ('ic_on', 9e-3, 13e-3, 'A', 'LED current (design 10.7 mA)'),
+        ('ib_on', 0.9e-3, 1.3e-3, 'A', 'base current (design 1.18 mA), well inside the pin rating'),
+        ('beta_f', 8, 15, 'x', 'forced gain Ic/Ib, far below the transistor gain: saturated'),
+        ('vce_on', 0, 0.2, 'V', 'collector-emitter saturation voltage'),
+        ('vbe_on', 0.65, 0.8, 'V', 'base-emitter voltage'),
+        ('vled', 1.6, 2.0, 'V', 'LED forward voltage'),
+        ('pq_on', 0, 5e-3, 'W', 'transistor dissipation'),
+        ('ic_off', -1e-6, 1e-6, 'A', 'LED off when the pin is low'),
+        ('t_on', 0, 1e-6, 's', 'turn-on delay'),
+        ('t_off', 0, 2e-6, 's', 'turn-off delay (charge stored in saturation)'),
+    ]),
+    ('status LED: FPGA pin floating during configuration', 'status_led.cir', {'RSRC': '100Meg'}, None, [
+        ('ic_on', -1e-6, 1e-6, 'A', 'pull-down keeps the LED off'),
+        ('vbe_on', -0.01, 0.1, 'V', 'base held near ground'),
+    ]),
+    ('status LED: base resistor too large (150 k), active region', 'status_led.cir', {'RB': '150k'}, None, [
+        ('vce_on', 1.0, 4.0, 'V', 'not saturated: the transistor drops voltage'),
+        ('ic_on', 1e-3, 8e-3, 'A', 'LED dim, current set by the gain, not by the resistor'),
+        ('beta_f', 100, 500, 'x', 'Ic/Ib is now the transistor gain'),
+    ]),
     ('buck (averaged): start-up, load steps, 9-15 V input', 'buck_averaged.cir', {}, 'v(out) v(ea) i(L1)', [
         ('v_light', 4.95, 5.05, 'V', 'regulation at 0.2 A'),
         ('v_heavy', 4.95, 5.05, 'V', 'regulation at 1 A'),
@@ -108,6 +129,8 @@ def run(test, tmp):
 def fmt(v, unit):
     if unit == 's':
         return f'{v * 1e6:.2f} µs' if v < 1e-3 else f'{v * 1e3:.2f} ms'
+    if unit == 'x':
+        return f'{v:.4g}'
     if unit == '':
         return f'{v * 100:.1f} %'
     if v != 0 and abs(v) < 1e-3:

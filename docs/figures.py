@@ -67,6 +67,9 @@ d += e.Label().at((ls.N[0] + 0.25, (ls.N[1] + lidar.E[1]) / 2)).label('UART 5 V'
 d += flow.Arrow().at((ls.S[0] + 0.5, ls.S[1])).to((ls.S[0] + 0.5, fpga.N[1]))
 d += flow.Arrow().at((ls.S[0] - 0.5, fpga.N[1])).to((ls.S[0] - 0.5, ls.S[1]))
 d += e.Label().at((ls.S[0] + 0.75, (ls.S[1] + fpga.N[1]) / 2)).label('UART 3.3 V', **LBL)
+d += (led := flow.Box(**B).at((buck.S[0], ROW2)).anchor('N').label('6 Status LED\nNPN switch'))
+d += flow.Arrow().at((led.S[0], fpga.N[1])).to(led.S)
+d += e.Label().at((led.S[0] + 0.25, (led.S[1] + fpga.N[1]) / 2)).label('status', **LBL)
 save(d, 'block_diagram')
 
 # ------------------------------------------------------------------ power stage (blocks 1 + 2)
@@ -214,6 +217,23 @@ d += e.Ground()
 d += e.Line().at(a.center).right(0.8)
 d += e.Dot(open=True).label('XADC\n1 V/A', loc='right')
 save(d, 'current_sense')
+
+# ------------------------------------------------------------------ status LED (block 6)
+d = D()
+d += (v5 := e.Dot().label('5 V', loc='left'))
+d += e.Line().right(2)
+d += e.Resistor().down().label('Rled 270 Ω', loc='bottom')
+d += (ld := e.LED().down().label('D3 red', loc='bottom'))
+d += (q := e.BjtNpn().theta(0).anchor('collector').at(ld.end).label('Q1 2N3904', loc='right', ofst=0.3))
+d += e.Ground().at(q.emitter)
+d += e.Line().at(q.base).left(0.8)
+d += (bn := e.Dot())
+d += e.Resistor().left().label('Rb 2.2k', loc='top')
+d += e.Line().left(0.6)
+d += e.Dot(open=True).label('FPGA pin\n3.3 V', loc='left')
+d += e.Resistor().at(bn.center).down().label('Rpd 100k', loc='top')
+d += e.Ground()
+save(d, 'status_led')
 
 # ------------------------------------------------------------------ plots
 import matplotlib

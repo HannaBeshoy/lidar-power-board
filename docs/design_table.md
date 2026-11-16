@@ -40,3 +40,9 @@
 | Current sense | op-amp common-mode at the inputs | 5 V · Rb/(Ra + Rb) | 4.55 V | op-amp supplied from 12 V |
 | Current sense | worst-case zero error, 1 % resistors | Acm·Vcm, Acm ≈ 4ε·G/(1 + G) | 182 mV = 182 mA |  |
 | Current sense | worst-case zero error, 0.1 % resistors | Acm·Vcm, Acm ≈ 4ε·G/(1 + G) | 18 mV = 18 mA | 0.1 % resistors + zero calibration in the FPGA |
+| Status LED | collector resistor | (5 V − V_LED − V_CE(sat)) / I_LED | 290 Ω | 270 Ω → 10.7 mA |
+| Status LED | base current needed at minimum gain | I_C / β_min | 107 µA |  |
+| Status LED | base resistor for a forced gain of 10 | (3.3 V − V_BE) / (I_C / 10) | 2421 Ω | 2.2 kΩ → 1.18 mA |
+| Status LED | overdrive factor | I_B / (I_C / β_min) | 11.0 | saturated with margin |
+| Status LED | transistor loss when on | V_CE(sat)·I_C + V_BE·I_B | 3.0 mW | 2N3904, no heatsink |
+| Status LED | largest base resistor that still saturates | (3.3 V − V_BE) / (I_C / β_min) | 24 kΩ | above this the LED dims |

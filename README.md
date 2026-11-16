@@ -4,14 +4,14 @@
 
 The analog board that sits between a 12 V supply, a 2D LiDAR sensor and a Nexys 4 DDR FPGA. It powers the sensor, lets the FPGA control the scan motor, translates the UART logic levels and measures the current the sensor draws. Each block uses one part of the Electronics course, and every block is checked by simulation against written limits.
 
-- [x] All five blocks designed, with the equations in [`calc/design.py`](calc/design.py)
-- [x] Verified in simulation: `python3 sim/run_all.py` gives **32/32 checks passed** ([saved output](docs/sim_results.txt))
+- [x] All six blocks designed, with the equations in [`calc/design.py`](calc/design.py)
+- [x] Verified in simulation: `python3 sim/run_all.py` gives **47/47 checks passed** ([saved output](docs/sim_results.txt))
 - [ ] Sensor model to be confirmed (see [assumptions](#assumptions))
 - [ ] Hardware build on a prototype board
 
 ![Block diagram](docs/img/block_diagram.svg)
 
-## The five blocks
+## The six blocks
 
 | # | Block | What it does | Course topic | Key result (simulated) |
 | --- | --- | --- | --- | --- |
@@ -20,6 +20,7 @@ The analog board that sits between a 12 V supply, a 2D LiDAR sensor and a Nexys 
 | 3 | Level shifter | Bidirectional 3.3 V ↔ 5 V UART with one MOSFET per line | MOS transistors | Works both ways at 115 200 baud, 0.9 µs rise time |
 | 4 | Motor driver | Low-side logic-level MOSFET switched by a 25 kHz PWM from the FPGA | MOSFET as a switch, PWM | 0–300 mA motor current, drain clamped at 5.26 V, 5 mW loss |
 | 5 | Current sense | 0.1 Ω shunt and a difference amplifier with gain 10 into the FPGA's XADC | Op-amp applications | 1.000 V at 1 A, 0.200 V at 0.2 A |
+| 6 | Status LED | NPN transistor as a saturated switch: a 3.3 V FPGA pin turns on an 11 mA LED on the 5 V rail | Bipolar transistor | V_CE(sat) 90 mV at a forced gain of 10, 1.9 mW loss; off while the pin floats |
 
 ## Results
 
@@ -51,7 +52,7 @@ More plots and every schematic are in the [project guide](docs/PROJECT_GUIDE.md)
 ```bash
 pip install -r requirements.txt     # numpy, matplotlib, schemdraw
 sudo apt install ngspice            # or: brew install ngspice
-python3 sim/run_all.py              # runs every netlist and checks 32 limits
+python3 sim/run_all.py              # runs every netlist and checks 47 limits
 python3 calc/design.py              # prints the design table, draws the Bode plot
 python3 docs/figures.py             # redraws the schematics and plots
 ```

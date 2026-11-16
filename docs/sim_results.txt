@@ -29,6 +29,27 @@ current sense: 0.2 A then 1 A  [current_sense.cir]
   PASS  vadc_02           0.2004 V   limits 0.19 V .. 0.21 V   1 V per A at 0.2 A
   PASS  vadc_1                 1 V   limits 0.98 V .. 1.02 V   1 V per A at 1 A (XADC full scale)
 
+status LED: FPGA pin high, transistor saturated  [status_led.cir]
+  PASS  ic_on              11.6 mA   limits 9 mA .. 13 mA   LED current (design 10.7 mA)
+  PASS  ib_on              1.13 mA   limits 900 µA .. 1.3 mA   base current (design 1.18 mA), well inside the pin rating
+  PASS  beta_f               10.29   limits 8 .. 15   forced gain Ic/Ib, far below the transistor gain: saturated
+  PASS  vce_on             90.2 mV   limits 0 V .. 0.2 V   collector-emitter saturation voltage
+  PASS  vbe_on            0.7484 V   limits 0.65 V .. 0.8 V   base-emitter voltage
+  PASS  vled                1.78 V   limits 1.6 V .. 2 V   LED forward voltage
+  PASS  pq_on              1.89 mW   limits 0 W .. 5 mW   transistor dissipation
+  PASS  ic_off         8.54e-06 µA   limits -1 µA .. 1 µA   LED off when the pin is low
+  PASS  t_on               0.01 µs   limits 0.00 µs .. 1.00 µs   turn-on delay
+  PASS  t_off              0.27 µs   limits 0.00 µs .. 2.00 µs   turn-off delay (charge stored in saturation)
+
+status LED: FPGA pin floating during configuration  [status_led.cir]
+  PASS  ic_on          8.54e-06 µA   limits -1 µA .. 1 µA   pull-down keeps the LED off
+  PASS  vbe_on              3.3 mV   limits -10 mV .. 0.1 V   base held near ground
+
+status LED: base resistor too large (150 k), active region  [status_led.cir]
+  PASS  vce_on             2.948 V   limits 1 V .. 4 V   not saturated: the transistor drops voltage
+  PASS  ic_on              1.54 mA   limits 1 mA .. 8 mA   LED dim, current set by the gain, not by the resistor
+  PASS  beta_f               143.7   limits 100 .. 500   Ic/Ib is now the transistor gain
+
 buck (averaged): start-up, load steps, 9-15 V input  [buck_averaged.cir]
   PASS  v_light            4.999 V   limits 4.95 V .. 5.05 V   regulation at 0.2 A
   PASS  v_heavy            4.999 V   limits 4.95 V .. 5.05 V   regulation at 1 A
@@ -47,4 +68,4 @@ buck (switching): 100 kHz at 1 A  [buck_switching.cir]
   PASS  duty              0.8784 V   limits 0.8 V .. 0.95 V   error-amp output (duty = V/2 ≈ 0.43)
   PASS  efficiency          94.1 %   limits 88.0 % .. 100.0 %   Pout / Pin
 
-32/32 checks passed
+47/47 checks passed

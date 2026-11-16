@@ -132,6 +132,25 @@ for tol in (0.01, 0.001):
         f'{acm * 5 * 1e3:.0f} mV = {acm * 5 / (RSH * G) * 1e3:.0f} mA',
         '0.1 % resistors + zero calibration in the FPGA' if tol == 0.001 else '')
 
+# ---------------------------------------------------------------- block 6: status LED on an NPN switch (Topic 9)
+V_PIN, VBE_ON, VCE_SAT = 3.3, 0.7, 0.2           # FPGA pin, base-emitter drop, saturation voltage
+V_LED, I_LED = 1.9, 10e-3                        # red LED
+BETA_MIN, BETA_FORCED = 100, 10                  # 2N3904 minimum gain at 10 mA; gain used for the design
+RC_LED = (VOUT - V_LED - VCE_SAT) / I_LED
+RC_CH = e12(RC_LED)
+IC_LED = (VOUT - V_LED - VCE_SAT) / RC_CH
+row('Status LED', 'collector resistor', '(5 V − V_LED − V_CE(sat)) / I_LED', f'{RC_LED:.0f} Ω', f'{RC_CH:.0f} Ω → {IC_LED * 1e3:.1f} mA')
+IB_NEED = IC_LED / BETA_MIN
+IB_DES = IC_LED / BETA_FORCED
+RB_LED = (V_PIN - VBE_ON) / IB_DES
+RB_CH = e12(RB_LED)
+IB_LED = (V_PIN - VBE_ON) / RB_CH
+row('Status LED', 'base current needed at minimum gain', 'I_C / β_min', f'{IB_NEED * 1e6:.0f} µA')
+row('Status LED', 'base resistor for a forced gain of 10', '(3.3 V − V_BE) / (I_C / 10)', f'{RB_LED:.0f} Ω', f'{RB_CH / 1e3:.1f} kΩ → {IB_LED * 1e3:.2f} mA')
+row('Status LED', 'overdrive factor', 'I_B / (I_C / β_min)', f'{IB_LED / IB_NEED:.1f}', 'saturated with margin')
+row('Status LED', 'transistor loss when on', 'V_CE(sat)·I_C + V_BE·I_B', f'{(VCE_SAT * IC_LED + VBE_ON * IB_LED) * 1e3:.1f} mW', '2N3904, no heatsink')
+row('Status LED', 'largest base resistor that still saturates', '(3.3 V − V_BE) / (I_C / β_min)', f'{(V_PIN - VBE_ON) / IB_NEED / 1e3:.0f} kΩ', 'above this the LED dims')
+
 # ---------------------------------------------------------------- output
 if __name__ == '__main__':
     w = [14, 40, 46, 18, 30]

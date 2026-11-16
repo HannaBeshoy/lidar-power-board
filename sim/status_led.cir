@@ -1,0 +1,34 @@
+* LiDAR power board - block 6: status LED switched by an NPN transistor (2N3904 type)
+* The FPGA pin (3.3 V, a few mA at most) turns on a 10 mA LED on the 5 V rail.
+* RB sets the base current for saturation; RPD keeps the LED off while the pin floats.
+.param VPIN=3.3
+.param RB=2.2k
+.param RSRC=50
+V5 v5 0 5
+* FPGA pin: off for 0.2 ms, on for 0.5 ms, off again; RSRC is the pin's output resistance
+Vpin pin0 0 PULSE(0 {VPIN} 0.2m 10n 10n 0.5m 2m)
+Rsrc pin0 pin {RSRC}
+Rb pin b {RB}
+Rpd b 0 100k
+Vib b bq 0
+Q1 c bq 0 QNPN
+.model QNPN NPN(Is=6.734f Xti=3 Eg=1.11 Vaf=74.03 Bf=416.4 Ne=1.259 Ise=6.734f Ikf=66.78m Xtb=1.5 Br=0.7371 Nc=2 Isc=0 Ikr=0 Rc=1 Cjc=3.638p Mjc=0.3085 Vjc=0.75 Fc=0.5 Cje=4.493p Mje=0.2593 Vje=0.75 Tr=239.5n Tf=301.2p Itf=0.4 Vtf=4 Xtf=2 Rb=10)
+* red LED, about 1.8 V at 10 mA, and its series resistor
+Rc v5 a 270
+Dled a k DLED
+.model DLED D(Is=1e-18 N=1.8 Rs=5 Cjo=20p)
+Vic k c 0
+Bpq p_q 0 V=V(c)*I(Vic)+V(bq)*I(Vib)
+Bled vl 0 V=V(a)-V(k)
+.tran 20n 1m
+.meas tran ic_on AVG i(Vic) from=0.5m to=0.69m
+.meas tran ib_on AVG i(Vib) from=0.5m to=0.69m
+.meas tran vce_on AVG v(c) from=0.5m to=0.69m
+.meas tran vbe_on AVG v(bq) from=0.5m to=0.69m
+.meas tran vled AVG v(vl) from=0.5m to=0.69m
+.meas tran pq_on AVG v(p_q) from=0.5m to=0.69m
+.meas tran beta_f PARAM='ic_on/ib_on'
+.meas tran ic_off AVG i(Vic) from=0.05m to=0.19m
+.meas tran t_on TRIG v(pin0) VAL={VPIN/2} RISE=1 TARG i(Vic) VAL=5m RISE=1
+.meas tran t_off TRIG v(pin0) VAL={VPIN/2} FALL=1 TARG i(Vic) VAL=1m FALL=1
+.end

@@ -28,6 +28,11 @@ Rb Rf,5 Current sense,100 kOhm 0.1 %,,0603,2,Difference amplifier gain 10
 U3,5 Current sense,Op-amp,LM358 (single supply 12 V),SO-8,1,Inputs at 4.55 V common mode
 Rflt,5 Current sense,1.6 kOhm,,0603,1,Anti-aliasing filter for the XADC (1 kHz)
 Cflt,5 Current sense,100 nF,X7R,0603,1,Anti-aliasing filter for the XADC
+Q1,6 Status LED,NPN transistor,2N3904 / MMBT3904,SOT-23,1,Saturated switch for the status LED
+Rb2,6 Status LED,2.2 kOhm,,0603,1,Base resistor: forced gain about 10
+Rpd2,6 Status LED,100 kOhm,,0603,1,Keeps the LED off while the FPGA pin floats
+Rled,6 Status LED,270 Ohm,,0603,1,LED current about 11 mA from 5 V
+D3,6 Status LED,Red LED,,0603,1,Overcurrent / status indicator
 J1,Connectors,2-pin 12 V input,Screw terminal 5.08 mm,THT,1,
 J2,Connectors,LiDAR connector,JST-PH / per sensor datasheet,THT,1,"5 V, GND, TX, RX, motor"
 J3,Connectors,Pmod 2x6,Pmod header (Digilent),THT,1,"To the Nexys 4 DDR: UART, PWM, XADC (JXADC header)"

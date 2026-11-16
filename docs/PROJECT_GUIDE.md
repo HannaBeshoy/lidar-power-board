@@ -10,10 +10,11 @@ This guide explains every block of the board: what it does, how each value was c
 4. [Block 3: level shifter](#4-block-3-level-shifter)
 5. [Block 4: motor driver](#5-block-4-motor-driver)
 6. [Block 5: current sense](#6-block-5-current-sense)
-7. [Verification summary](#7-verification-summary)
-8. [Using the netlists in LTspice](#8-using-the-netlists-in-ltspice)
-9. [Building the board](#9-building-the-board)
-10. [Course topic map](#10-course-topic-map)
+7. [Block 6: status LED](#7-block-6-status-led)
+8. [Verification summary](#8-verification-summary)
+9. [Using the netlists in LTspice](#9-using-the-netlists-in-ltspice)
+10. [Building the board](#10-building-the-board)
+11. [Course topic map](#11-course-topic-map)
 
 ## 1. Requirements
 
@@ -178,9 +179,42 @@ The MOSFET dissipates under 5 mW, so it needs no heatsink.
 
 **Course link:** Topic 8, the difference amplifier and the RC low-pass filter.
 
-## 7. Verification summary
+## 7. Block 6: status LED
 
-`python3 sim/run_all.py` runs every netlist and checks 32 measured values against written limits. The saved output is [`sim_results.txt`](sim_results.txt).
+![Status LED](img/status_led.svg)
+
+**What it does.** Lets the FPGA show a state on the board itself, for example "sensor current too high". An FPGA pin should not drive an 11 mA LED from the 5 V rail directly: the pin is 3.3 V and is meant for a few milliamps. An NPN transistor does it instead. The pin only supplies the base current.
+
+**The transistor as a switch.** A bipolar transistor has three regions. With no base current it is cut off and the LED is dark. With a little base current it is in the active region, where I_C = β · I_B and the transistor drops whatever voltage is left over. With more base current than the load can use it saturates: V_CE falls to about 0.1 V and the collector current is set by the resistor and the LED, not by β. A switch must be in saturation, because β varies from 100 to 400 between parts and with temperature.
+
+**Design.**
+
+| Quantity | Formula | Value |
+| --- | --- | --- |
+| Collector resistor | (5 V − 1.9 V − 0.2 V) / 10 mA | 290 Ω → 270 Ω, 10.7 mA |
+| Base current needed at β = 100 | I_C / β | 107 µA |
+| Base resistor for a forced gain of 10 | (3.3 V − 0.7 V) / 1.07 mA | 2.4 kΩ → 2.2 kΩ, 1.18 mA |
+| Overdrive | I_B / (I_C / β_min) | 11 times |
+
+The forced gain of 10 is the usual rule for a saturated switch: ten times more base current than the weakest transistor needs. A 100 kΩ resistor from base to ground keeps the transistor off while the FPGA is being configured and its pins float.
+
+**Simulation** ([`status_led.cir`](../sim/status_led.cir)), three cases:
+
+| Case | I_C | I_B | I_C / I_B | V_CE | Region |
+| --- | --- | --- | --- | --- | --- |
+| Pin high, R_B = 2.2 kΩ | 11.6 mA | 1.13 mA | 10.3 | 90 mV | saturation |
+| Pin floating | 0 | 0 | | 4.26 V | cut-off |
+| Pin high, R_B = 150 kΩ (too large on purpose) | 1.5 mA | 11 µA | 144 | 2.95 V | active |
+
+In the third case the base current is too small to saturate the transistor. The LED current is now β · I_B and the transistor, not the resistor, takes up the spare 3 V: the LED is dim and its brightness would change from part to part. The largest base resistor that still saturates the weakest transistor is 24 kΩ.
+
+The transistor dissipates 1.9 mW when on. It turns on in about 10 ns and off in 0.27 µs; the slower turn-off is the charge stored in the base during saturation.
+
+**Course link:** Topic 9, the bipolar transistor: regions of operation, β, saturation, the transistor as a switch.
+
+## 8. Verification summary
+
+`python3 sim/run_all.py` runs every netlist and checks 47 measured values against written limits. The saved output is [`sim_results.txt`](sim_results.txt).
 
 | Block | Checks | Status |
 | --- | --- | --- |
@@ -190,8 +224,9 @@ The MOSFET dissipates under 5 mW, so it needs no heatsink.
 | 3 Level shifter | 6 | pass |
 | 4 Motor driver (duty 0.6 and 1) | 5 | pass |
 | 5 Current sense | 2 | pass |
+| 6 Status LED (on, pin floating, base resistor too large) | 15 | pass |
 
-## 8. Using the netlists in LTspice
+## 9. Using the netlists in LTspice
 
 Each `.cir` file is plain SPICE, the same as the netlists LTspice writes for the course labs:
 
@@ -202,7 +237,7 @@ Each `.cir` file is plain SPICE, the same as the netlists LTspice writes for the
 
 The `B` sources in some files are behavioural sources (an arbitrary expression), used as power meters and in the averaged buck model; LTspice supports them directly.
 
-## 9. Building the board
+## 10. Building the board
 
 The discrete controller of block 2 is there to show how the loop works. For a board you can build, there are two options:
 
@@ -211,7 +246,7 @@ The discrete controller of block 2 is there to show how the loop works. For a bo
 
 The board connects to the Nexys 4 DDR through one Pmod header (UART and PWM) and the JXADC header (current sense).
 
-## 10. Course topic map
+## 11. Course topic map
 
 | Course topic | Where it appears |
 | --- | --- |
@@ -219,6 +254,7 @@ The board connects to the Nexys 4 DDR through one Pmod header (UART and PWM) and
 | 3 AC analysis | LC resonance, capacitor impedance and ESR |
 | 4 Diodes | Reverse-polarity diode D0, freewheeling diode D1, flyback diode, body diode in the level shifter |
 | 5 MOSFETs | Level shifter, motor driver, buck switch |
+| 9 Bipolar transistor | Status LED switch: cut-off, saturation and, as a counter-example, the active region |
 | 6 DC-DC converters | The whole buck converter |
 | 7 Op-amps and feedback | Error amplifier |
 | 8 Op-amp applications, Bode plots | Type III compensation, loop gain plot, difference amplifier, RC filter |
